@@ -550,7 +550,7 @@ def main():
         if 'login_mode' in locals() and login_mode:
             if login():
                 st.success("Login successful!")
-                st.rerun()
+                
 
         if 'signup_mode' in locals() and signup_mode:
             signup()
