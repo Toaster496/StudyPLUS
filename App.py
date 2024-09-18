@@ -487,7 +487,7 @@ def login():
     st.subheader("Login")
     username = st.text_input("Username")
     password = st.text_input("Password", type="password")
-    if st.button("Login"):
+    if st.button("Login", key="login_button"):
         user = get_user(username)
         if user and check_password(password, user[1]):
             st.success(f"Logged in as {user[2]}")
@@ -506,7 +506,7 @@ def signup():
     new_username = st.text_input("New Username")
     new_password = st.text_input("New Password", type="password")
     name = st.text_input("Your Name")
-    if st.button("Sign Up"):
+    if st.button("Sign Up", key="signup_button"):
         if get_user(new_username):
             st.error("Username already exists")
         else:
@@ -529,47 +529,36 @@ def check_time_and_transfer():
             st.success(f"10 StudyCoins have been transferred to your wallet: {st.session_state.wallet_address}")
 
 def main():
-    # Initialize session state variables if they don't exist
     if 'logged_in' not in st.session_state:
         st.session_state.logged_in = False
     if 'username' not in st.session_state:
         st.session_state.username = ""
 
-    # Persistent "Study Plus" title at the top
-    st.markdown("<h1 style='text-align: center;'>Study Plus - The better way to study</h1>", unsafe_allow_html=True)  # Center the title
+    st.markdown("<h1 style='text-align: center;'>Study Plus - The better way to study</h1>", unsafe_allow_html=True)
 
-    # Show "Login" and "Sign Up" buttons if the user is not logged in
     if not st.session_state.logged_in:
-        col1, col2, col3 = st.columns([1, 1, 1])  # Create three equal-sized columns to center the buttons
-
-        with col2:  # Place buttons in the center column
-            col_login, col_signup = st.columns([1, 1])  # Two sub-columns inside the middle column for buttons
+        col1, col2, col3 = st.columns([1, 1, 1])
+        with col2:
+            col_login, col_signup = st.columns([1, 1])
             with col_login:
-                if st.button("Login"):
-                    login_mode = True  # Flag for login form
+                if st.button("Login", key="login_button_main"):
+                    login_mode = True
             with col_signup:
-                if st.button("Sign Up"):
-                    signup_mode = True  # Flag for signup form
+                if st.button("Sign Up", key="signup_button_main"):
+                    signup_mode = True
 
-        # Show the login form if "Login" is clicked
         if 'login_mode' in locals() and login_mode:
-            if login():  # Check if login is successful
+            if login():
                 st.success("Login successful!")
-                st.experimental_rerun()  # Refresh to hide login/signup buttons
+                st.rerun()
 
-        # Show the signup form if "Sign Up" is clicked
         if 'signup_mode' in locals() and signup_mode:
             signup()
 
-    # After logging in, show the chatbot and StudyCoin functionality
     if st.session_state.logged_in:
-        st.write(f"Welcome, {st.session_state.username}!")  # Greet the user
-        check_time_and_transfer()  # Chatbot and StudyCoin transfer logic
+        st.write(f"Welcome, {st.session_state.username}!")
+        check_time_and_transfer()
         display_chatbot()
-
 # Run the main function
-if __name__ == '__main__':
-    main()
-
 if __name__ == '__main__':
     main()
