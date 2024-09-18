@@ -487,25 +487,27 @@ def login():
     st.subheader("Login")
     username = st.text_input("Username")
     password = st.text_input("Password", type="password")
+    
+    # Use a unique key for the button to avoid conflicts
     if st.button("Login", key="login_button"):
         user = get_user(username)
         if user and check_password(password, user[1]):
-            st.success(f"Logged in as {user[2]}")
             st.session_state.logged_in = True
             st.session_state.username = username
             st.session_state.wallet_address = user[3]
             st.session_state.private_key = user[4]
             st.session_state.start_time = datetime.now()
+            st.success(f"Logged in as {user[2]}")  # Success message
             return True
         else:
             st.error("Invalid username or password")
     return False
-
 def signup():
     st.subheader("Sign Up")
     new_username = st.text_input("New Username")
     new_password = st.text_input("New Password", type="password")
     name = st.text_input("Your Name")
+    
     if st.button("Sign Up", key="signup_button"):
         if get_user(new_username):
             st.error("Username already exists")
@@ -515,6 +517,11 @@ def signup():
             st.success("Account created successfully. Please login.")
             st.write(f"Your new wallet address is: {wallet_address}")
             st.write(f"Private Key: {private_key}")
+            st.session_state.logged_in = True  # Automatically log in after sign-up
+            st.session_state.username = new_username
+            st.session_state.wallet_address = wallet_address
+            st.session_state.private_key = private_key
+            st.session_state.start_time = datetime.now()
 
 def check_time_and_transfer():
     if 'start_time' not in st.session_state:
@@ -529,6 +536,7 @@ def check_time_and_transfer():
             st.success(f"10 StudyCoins have been transferred to your wallet: {st.session_state.wallet_address}")
 
 def main():
+    # Initialize session state variables if they don't exist
     if 'logged_in' not in st.session_state:
         st.session_state.logged_in = False
     if 'username' not in st.session_state:
@@ -542,23 +550,17 @@ def main():
             col_login, col_signup = st.columns([1, 1])
             with col_login:
                 if st.button("Login", key="login_button_main"):
-                    login_mode = True
+                    login()  # Call login function directly
             with col_signup:
                 if st.button("Sign Up", key="signup_button_main"):
-                    signup_mode = True
+                    signup()  # Call signup function directly
 
-        if 'login_mode' in locals() and login_mode:
-            if login():
-                st.success("Login successful!")
-                
-
-        if 'signup_mode' in locals() and signup_mode:
-            signup()
-
+    # After logging in or signing up, show the chatbot and StudyCoin functionality
     if st.session_state.logged_in:
         st.write(f"Welcome, {st.session_state.username}!")
         check_time_and_transfer()
         display_chatbot()
+
 # Run the main function
 if __name__ == '__main__':
     main()
