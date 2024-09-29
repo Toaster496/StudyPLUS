@@ -360,10 +360,6 @@ contract_abi = '''
 '''
 
 contract = bsc_testnet.eth.contract(address=contract_address, abi=contract_abi)
-owner_private_key = '4f0bed9689c07975d5c5ceea4da3343c78180f21a2261bf90eb2b62ba2659038'  
-owner_address = '0x26e9CaE4716f20c2817b48B6416339D2253a5e04'
-
-
 
 # Utility functions
 def hash_password(password):
