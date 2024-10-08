@@ -359,6 +359,7 @@ contract_abi = '''
 ]
 '''
 
+
 contract = bsc_testnet.eth.contract(address=contract_address, abi=contract_abi)
 
 # Utility functions
@@ -457,28 +458,26 @@ def display_chatbot():
             try:
                 # Use g4f.client to generate the response
                 response = g4f.ChatCompletion.create(
-                    model="chatgpt-4o-latest",
+                    model="gpt-4o",
                     messages=messages,
-                    stream=False  # Set to True if you want to implement streaming
+                    stream=False  # Set to False for non-streaming example
                 )
-                
-                # Attempt to handle the response as a string, if that's the format returned by g4f
-                if isinstance(response, str):
-                    assistant_reply = response
-                elif isinstance(response, dict) and 'choices' in response:
-                    # Handle as if it were OpenAI's response format
+
+                # Handle response as a dictionary
+                if isinstance(response, dict) and 'choices' in response:
+                    # Extract just the content of the assistant's reply
                     assistant_reply = response['choices'][0]['message']['content']
                 else:
-                    # Unexpected format, just convert to string and display
-                    assistant_reply = str(response)
+                    assistant_reply = "Sorry, I didn't understand the response format."
 
                 # Display the assistant's response
                 st.write("Response from the assistant:")
                 st.write(assistant_reply)
-                
+
             except Exception as e:
                 st.error(f"Error while contacting API: {e}")
 
+                
 # Login functionality
 def login():
     st.subheader("Login")
