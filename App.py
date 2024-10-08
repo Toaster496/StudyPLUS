@@ -457,7 +457,7 @@ def display_chatbot():
             try:
                 # Use g4f.client to generate the response
                 response = g4f.ChatCompletion.create(
-                    model="gpt-3.5-turbo",
+                    model="chatgpt-4o-latest",
                     messages=messages,
                     stream=False  # Set to True if you want to implement streaming
                 )
@@ -479,57 +479,57 @@ def display_chatbot():
             except Exception as e:
                 st.error(f"Error while contacting API: {e}")
 
+# Login functionality
 def login():
     st.subheader("Login")
-    username = st.text_input("Username")
-    password = st.text_input("Password", type="password")
-    
-    # Use a unique key for the button to avoid conflicts
-    if st.button("Login", key="login_button"):
-        user = get_user(username)
-        if user and check_password(password, user[1]):
+    username = st.text_input("Username", key="login_username")
+    password = st.text_input("Password", type="password", key="login_password")
+    if st.button("Submit Login", key="submit_login"):
+        user = get_user(username)  # Replace with your actual function to get user
+        if user and check_password(password, user[1]):  # Replace with password checking logic
+            st.success(f"Logged in as {user[2]}")
             st.session_state.logged_in = True
             st.session_state.username = username
             st.session_state.wallet_address = user[3]
             st.session_state.private_key = user[4]
             st.session_state.start_time = datetime.now()
-            st.success(f"Logged in as {user[2]}")  # Success message
+            st.rerun()
             return True
         else:
             st.error("Invalid username or password")
     return False
+
+# Signup functionality
 def signup():
     st.subheader("Sign Up")
-    new_username = st.text_input("New Username")
-    new_password = st.text_input("New Password", type="password")
-    name = st.text_input("Your Name")
-    
-    if st.button("Sign Up", key="signup_button"):
-        if get_user(new_username):
+    new_username = st.text_input("New Username", key="signup_username")
+    new_password = st.text_input("New Password", type="password", key="signup_password")
+    name = st.text_input("Your Name", key="signup_name")
+    if st.button("Submit Signup", key="submit_signup"):
+        if get_user(new_username):  # Check if username exists
             st.error("Username already exists")
         else:
-            private_key, wallet_address = create_wallet()
-            add_user(new_username, new_password, name, wallet_address, private_key)
+            private_key, wallet_address = create_wallet()  # Add wallet creation logic
+            add_user(new_username, new_password, name, wallet_address, private_key)  # Add user logic
             st.success("Account created successfully. Please login.")
             st.write(f"Your new wallet address is: {wallet_address}")
             st.write(f"Private Key: {private_key}")
-            st.session_state.logged_in = True  # Automatically log in after sign-up
-            st.session_state.username = new_username
-            st.session_state.wallet_address = wallet_address
-            st.session_state.private_key = private_key
-            st.session_state.start_time = datetime.now()
 
-def check_time_and_transfer():
-    if 'start_time' not in st.session_state:
-        st.session_state.start_time = datetime.now()
+# Sidebar to display time left until coin release
+def show_sidebar_time():
+    if 'start_time' in st.session_state:
+        time_spent = datetime.now() - st.session_state.start_time
+        minutes_spent = time_spent.seconds // 60
+        minutes_left = max(30 - minutes_spent, 0)
+        st.sidebar.write(f"Time left until next coin reward: {minutes_left} minutes")
 
-    time_spent = datetime.now() - st.session_state.start_time
-    minutes_spent = time_spent.seconds // 60
-    if minutes_spent >= 30:
-        st.success("You've spent over 30 minutes on the app!")
-        if st.session_state.logged_in:
-            transfer_studycoin(st.session_state.wallet_address, 10)
-            st.success(f"10 StudyCoins have been transferred to your wallet: {st.session_state.wallet_address}")
+        if minutes_spent >= 30:
+            st.sidebar.success("You've earned 10 StudyCoins!")
+            if st.session_state.logged_in:
+                transfer_studycoin(st.session_state.wallet_address, 10)  # Replace with actual transfer logic
+                st.session_state.start_time = datetime.now()  # Reset timer after transfer
+    else:
+        st.sidebar.write("Start studying to earn StudyCoins!")
 
 def main():
     # Initialize session state variables if they don't exist
@@ -537,25 +537,45 @@ def main():
         st.session_state.logged_in = False
     if 'username' not in st.session_state:
         st.session_state.username = ""
+    if 'show_login' not in st.session_state:
+        st.session_state.show_login = False
+    if 'show_signup' not in st.session_state:
+        st.session_state.show_signup = False
 
+    # Persistent "Study Plus" title at the top
     st.markdown("<h1 style='text-align: center;'>Study Plus - The better way to study</h1>", unsafe_allow_html=True)
 
-    if not st.session_state.logged_in:
-        col1, col2, col3 = st.columns([1, 1, 1])
-        with col2:
-            col_login, col_signup = st.columns([1, 1])
-            with col_login:
-                if st.button("Login", key="login_button_main"):
-                    login()  # Call login function directly
-            with col_signup:
-                if st.button("Sign Up", key="signup_button_main"):
-                    signup()  # Call signup function directly
+    # Show sidebar time tracker for coin release
+    show_sidebar_time()
 
-    # After logging in or signing up, show the chatbot and StudyCoin functionality
+    # Show Login and Signup forms side by side if not logged in
+    if not st.session_state.logged_in:
+        col1, col2 = st.columns(2)
+
+        with col1:
+            if st.button("Login", key="login_button"):
+                st.session_state.show_login = True
+                st.session_state.show_signup = False  # Hide signup form if login is clicked
+
+        with col2:
+            if st.button("Sign Up", key="signup_button"):
+                st.session_state.show_signup = True
+                st.session_state.show_login = False  # Hide login form if signup is clicked
+
+        # Display login form if "Login" button is clicked
+        if st.session_state.show_login:
+            login()
+
+        # Display signup form if "Sign Up" button is clicked
+        if st.session_state.show_signup:
+            signup()
+
+    # After logging in, show the chatbot and StudyCoin functionality
     if st.session_state.logged_in:
-        st.write(f"Welcome, {st.session_state.username}!")
-        check_time_and_transfer()
-        display_chatbot()
+        
+        st.write(f"Welcome, {st.session_state.username}!")  # Greet the user
+        display_chatbot()  # Show chatbot
+
 
 # Run the main function
 if __name__ == '__main__':
